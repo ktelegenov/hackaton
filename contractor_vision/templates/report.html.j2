@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contractor Vision Report</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #0f172a;
+      --muted: #475569;
+      --accent: #2563eb;
+      --surface: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      color: var(--ink);
+      background: var(--surface);
+    }
+    header {
+      padding: 48px 56px 24px;
+      background: linear-gradient(120deg, #0ea5e9, #2563eb);
+      color: white;
+    }
+    header h1 { margin: 0 0 8px; font-size: 32px; }
+    header p { margin: 4px 0; opacity: 0.9; }
+    main { padding: 32px 56px 64px; }
+    .summary {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      margin-top: -36px;
+      border: 1px solid var(--border);
+    }
+    .summary h2 { margin-top: 0; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); }
+    .section { margin-top: 32px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+    .card img { width: 100%; height: auto; display: block; }
+    .card .content { padding: 16px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    th { background: #f1f5f9; }
+    tfoot td { font-weight: 600; }
+    footer {
+      margin-top: 32px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Contractor Vision Report</h1>
+    <p>{{ address }}</p>
+    <p>Design style: {{ design_style }}</p>
+  </header>
+  <main>
+    <section class="summary">
+      <h2>Executive Summary</h2>
+      <p>{{ executive_summary }}</p>
+      <div class="meta">
+        <span>Source: <a href="{{ source_url }}" style="color: var(--accent);">{{ source_url }}</a></span>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Room Concepts</h2>
+      <div class="grid">
+        {% for asset in assets %}
+        <div class="card">
+          <img src="{{ asset.original_path }}" alt="Original {{ asset.label }}" />
+          <div class="content">
+            <span class="badge">{{ asset.label }}</span>
+            {% if asset.is_floorplan %}
+              <p>Floor plan captured.</p>
+            {% endif %}
+            {% if asset.renovated_path %}
+              <img src="{{ asset.renovated_path }}" alt="Renovated {{ asset.label }}" />
+            {% else %}
+              <p>No AI render yet. Connect Replicate to enable.</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Budget Estimate</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Room</th>
+            <th>Low</th>
+            <th>High</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for room in budget.rooms %}
+          <tr>
+            <td>{{ room.room_label }}</td>
+            <td>${{ "{:,.0f}".format(room.low) }}</td>
+            <td>${{ "{:,.0f}".format(room.high) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td>${{ "{:,.0f}".format(budget.total_low) }}</td>
+            <td>${{ "{:,.0f}".format(budget.total_high) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <footer>
+      Estimates are rough ranges and will vary based on scope, labor, materials, and permitting.
+    </footer>
+  </main>
+</body>
+</html>

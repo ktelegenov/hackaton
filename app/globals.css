@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 antialiased;
+}
+
+.glass {
+  @apply bg-white/10 backdrop-blur-md border border-white/10 shadow-xl;
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-amber-200 via-emerald-200 to-sky-200 bg-clip-text text-transparent;
+}
