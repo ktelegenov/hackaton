@@ -159,13 +159,15 @@ export default function ReportPage() {
             <p className="mt-2 text-sm text-rose-500">{error}</p>
           )}
           <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {(images.length ? images : Array.from({ length: 6 })).map(
+            {(images.length
+              ? images
+              : Array.from({ length: 6 }, () => ({ url: "" }))).map(
               (item, index) => (
                 <div
                   key={`room-${index}`}
                   className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow"
                 >
-                  {typeof item === "object" && item?.url ? (
+                  {item.url ? (
                     <img
                       src={item.url}
                       alt={`Original room ${index + 1}`}
@@ -184,7 +186,7 @@ export default function ReportPage() {
                         ? "No AI render yet. Connect Replicate to enable."
                         : "Paste a listing URL to load images."}
                     </p>
-                    {typeof item === "object" && item?.url && (
+                    {item.url && (
                       <div className="mt-3">
                         <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                           Tag
