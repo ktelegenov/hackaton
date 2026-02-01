@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const defaultDesign = "Modern Coastal";
 
@@ -26,13 +30,79 @@ const assumptions = [
   "Final pricing based on local contractor quotes"
 ];
 
-export default function ReportPage({
-  searchParams
-}: {
-  searchParams: { url?: string; design?: string };
-}) {
-  const listingUrl = searchParams.url ?? "";
-  const design = searchParams.design ?? defaultDesign;
+const tagOptions = [
+  "Unassigned",
+  "Living room",
+  "Kitchen",
+  "Bedroom",
+  "Bathroom",
+  "Office",
+  "Dining",
+  "Exterior",
+  "Other"
+];
+
+export default function ReportPage() {
+  const searchParams = useSearchParams();
+  const listingUrl = searchParams.get("url") ?? "";
+  const design = searchParams.get("design") ?? defaultDesign;
+  const [images, setImages] = useState<Array<{ url: string; title?: string }>>(
+    []
+  );
+  const [imageTags, setImageTags] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const safeUrl = useMemo(() => listingUrl.trim(), [listingUrl]);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      if (!safeUrl) {
+        setImages([]);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(
+          `/api/listing-images?url=${encodeURIComponent(safeUrl)}`
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.error ?? "Unable to fetch images.");
+        }
+
+        const nextImages = Array.isArray(data.images) ? data.images : [];
+        const normalized = nextImages
+          .map((item: { url?: string; title?: string } | string) => {
+            if (typeof item === "string") return { url: item };
+            return item.url ? { url: item.url, title: item.title } : null;
+          })
+          .filter(Boolean) as Array<{ url: string; title?: string }>;
+
+        setImages(normalized);
+        setImageTags((prev) => {
+          const updated = { ...prev };
+          normalized.forEach((item) => {
+            if (!updated[item.url]) {
+              updated[item.url] = item.title ?? "Unassigned";
+            }
+          });
+          return updated;
+        });
+      } catch (err) {
+        setImages([]);
+        setError(err instanceof Error ? err.message : "Unexpected error.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchImages();
+  }, [safeUrl]);
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
@@ -77,24 +147,70 @@ export default function ReportPage({
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold">Room Concepts</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">Original Listing Images</h2>
+            {loading && (
+              <span className="text-xs uppercase tracking-wide text-slate-500">
+                Fetching images…
+              </span>
+            )}
+          </div>
+          {error && (
+            <p className="mt-2 text-sm text-rose-500">{error}</p>
+          )}
           <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={`room-${index}`}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow"
-              >
-                <div className="h-40 w-full bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300" />
-                <div className="p-4">
-                  <span className="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
-                    Room
-                  </span>
-                  <p className="mt-3 text-sm text-slate-500">
-                    No AI render yet. Connect Replicate to enable.
-                  </p>
+            {(images.length ? images : Array.from({ length: 6 })).map(
+              (item, index) => (
+                <div
+                  key={`room-${index}`}
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow"
+                >
+                  {typeof item === "object" && item?.url ? (
+                    <img
+                      src={item.url}
+                      alt={`Original room ${index + 1}`}
+                      className="h-40 w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="h-40 w-full bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300" />
+                  )}
+                  <div className="p-4">
+                    <span className="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                      Original
+                    </span>
+                    <p className="mt-3 text-sm text-slate-500">
+                      {images.length
+                        ? "No AI render yet. Connect Replicate to enable."
+                        : "Paste a listing URL to load images."}
+                    </p>
+                    {typeof item === "object" && item?.url && (
+                      <div className="mt-3">
+                        <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                          Tag
+                        </label>
+                        <select
+                          className="mt-1 h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700"
+                          value={imageTags[item.url] ?? "Unassigned"}
+                          onChange={(event) =>
+                            setImageTags((prev) => ({
+                              ...prev,
+                              [item.url]: event.target.value
+                            }))
+                          }
+                        >
+                          {tagOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </section>
 

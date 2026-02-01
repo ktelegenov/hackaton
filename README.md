@@ -6,6 +6,7 @@ Modern Next.js interface for generating renovation concepts from a listing URL a
 - Next.js App Router UI
 - Tailwind-styled landing page
 - 3 preset design directions (Modern Coastal, Japandi Minimal, Industrial Loft)
+- Dynamic listing image fetch (Redfin/Zillow HTML parsing)
 - Railway-ready deployment configuration
 
 ## Local development
@@ -19,5 +20,4 @@ Modern Next.js interface for generating renovation concepts from a listing URL a
 4. Ensure the start command is `npm run start` (already set in railway.json).
 
 ## Notes
-- The UI is a frontend prototype only; wire it to your backend when ready.
-- The legacy Python CLI still exists in contractor_vision for reference.
+- Listing image extraction is best-effort and depends on public HTML; some listings may block scraping.
